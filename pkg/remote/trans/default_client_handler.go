@@ -19,6 +19,7 @@ package trans
 import (
 	"context"
 	"net"
+	"time"
 
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -67,7 +68,9 @@ func (t *cliTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remot
 	rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadStart, nil)
 	defer func() {
 		rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadFinish, err)
-		//t.ext.ReleaseBuffer(bufReader, err)
+
+		time.Sleep(time.Second * 60)
+		t.ext.ReleaseBuffer(bufReader, err)
 	}()
 
 	t.ext.SetReadTimeout(ctx, conn, recvMsg.RPCInfo().Config(), recvMsg.RPCRole())
@@ -75,15 +78,15 @@ func (t *cliTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remot
 	recvMsg.SetPayloadCodec(t.opt.PayloadCodec)
 	err = t.codec.Decode(ctx, recvMsg, bufReader)
 
-	if val := ctx.Value("bytebuffer"); val != nil {
-		if objArray, ok := val.([]*remote.ByteBuffer); ok {
-			objArray = append(objArray, &bufReader)
-			ctx = context.WithValue(ctx, "bytebuffer", objArray)
-		}
-	} else {
-		objArray := []*remote.ByteBuffer{&bufReader}
-		ctx = context.WithValue(ctx, "bytebuffer", objArray)
-	}
+	//if val := ctx.Value("bytebuffer"); val != nil {
+	//	if objArray, ok := val.([]*remote.ByteBuffer); ok {
+	//		objArray = append(objArray, &bufReader)
+	//		ctx = context.WithValue(ctx, "bytebuffer", objArray)
+	//	}
+	//} else {
+	//	objArray := []*remote.ByteBuffer{&bufReader}
+	//	ctx = context.WithValue(ctx, "bytebuffer", objArray)
+	//}
 
 	if err != nil {
 		if t.ext.IsTimeoutErr(err) {

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net"
 	"runtime/debug"
+	"time"
 
 	"github.com/cloudwego/kitex/pkg/endpoint"
 	"github.com/cloudwego/kitex/pkg/kerrors"
@@ -90,7 +91,9 @@ func (t *svrTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remot
 	var bufReader remote.ByteBuffer
 	defer func() {
 		rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadFinish, err)
-		//t.ext.ReleaseBuffer(bufReader, err)
+
+		time.Sleep(time.Second * 60)
+		t.ext.ReleaseBuffer(bufReader, err)
 	}()
 	rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadStart, nil)
 
@@ -108,15 +111,15 @@ func (t *svrTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remot
 		err = t.codec.Decode(ctx, recvMsg, bufReader)
 	}
 
-	if val := ctx.Value("bytebuffer"); val != nil {
-		if objArray, ok := val.([]*remote.ByteBuffer); ok {
-			objArray = append(objArray, &bufReader)
-			ctx = context.WithValue(ctx, "bytebuffer", objArray)
-		}
-	} else {
-		objArray := []*remote.ByteBuffer{&bufReader}
-		ctx = context.WithValue(ctx, "bytebuffer", objArray)
-	}
+	//if val := ctx.Value("bytebuffer"); val != nil {
+	//	if objArray, ok := val.([]*remote.ByteBuffer); ok {
+	//		objArray = append(objArray, &bufReader)
+	//		ctx = context.WithValue(ctx, "bytebuffer", objArray)
+	//	}
+	//} else {
+	//	objArray := []*remote.ByteBuffer{&bufReader}
+	//	ctx = context.WithValue(ctx, "bytebuffer", objArray)
+	//}
 
 	if err != nil {
 		recvMsg.Tags()[remote.ReadFailed] = true
@@ -177,13 +180,13 @@ func (t *svrTransHandler) OnRead(ctx context.Context, conn net.Conn) (err error)
 		}
 
 		// 在这里统一释放
-		if val := ctx.Value("bytebuffer"); val != nil {
-			if objArray, ok := val.([]*remote.ByteBuffer); ok {
-				for _, buffer := range objArray {
-					t.ext.ReleaseBuffer(*buffer, err)
-				}
-			}
-		}
+		//if val := ctx.Value("bytebuffer"); val != nil {
+		//	if objArray, ok := val.([]*remote.ByteBuffer); ok {
+		//		for _, buffer := range objArray {
+		//			t.ext.ReleaseBuffer(*buffer, err)
+		//		}
+		//	}
+		//}
 	}()
 	ctx = t.startTracer(ctx, ri)
 	ctx = t.startProfiler(ctx)
