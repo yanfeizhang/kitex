@@ -19,7 +19,6 @@ package trans
 import (
 	"context"
 	"net"
-	"time"
 
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/kitex/pkg/klog"

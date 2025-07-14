@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"net"
 	"runtime/debug"
-	"time"
 
 	"github.com/cloudwego/kitex/pkg/endpoint"
 	"github.com/cloudwego/kitex/pkg/kerrors"
