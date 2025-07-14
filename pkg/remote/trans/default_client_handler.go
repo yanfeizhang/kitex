@@ -48,8 +48,8 @@ func (t *cliTransHandler) Write(ctx context.Context, conn net.Conn, sendMsg remo
 	var bufWriter remote.ByteBuffer
 	rpcinfo.Record(ctx, sendMsg.RPCInfo(), stats.WriteStart, nil)
 	defer func() {
-		t.ext.ReleaseBuffer(bufWriter, err)
 		rpcinfo.Record(ctx, sendMsg.RPCInfo(), stats.WriteFinish, err)
+		t.ext.ReleaseBuffer(bufWriter, err)
 	}()
 
 	bufWriter = t.ext.NewWriteByteBuffer(ctx, conn, sendMsg)
@@ -66,14 +66,25 @@ func (t *cliTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remot
 	var bufReader remote.ByteBuffer
 	rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadStart, nil)
 	defer func() {
-		t.ext.ReleaseBuffer(bufReader, err)
 		rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadFinish, err)
+		//t.ext.ReleaseBuffer(bufReader, err)
 	}()
 
 	t.ext.SetReadTimeout(ctx, conn, recvMsg.RPCInfo().Config(), recvMsg.RPCRole())
 	bufReader = t.ext.NewReadByteBuffer(ctx, conn, recvMsg)
 	recvMsg.SetPayloadCodec(t.opt.PayloadCodec)
 	err = t.codec.Decode(ctx, recvMsg, bufReader)
+
+	if val := ctx.Value("bytebuffer"); val != nil {
+		if objArray, ok := val.([]*remote.ByteBuffer); ok {
+			objArray = append(objArray, &bufReader)
+			ctx = context.WithValue(ctx, "bytebuffer", objArray)
+		}
+	} else {
+		objArray := []*remote.ByteBuffer{&bufReader}
+		ctx = context.WithValue(ctx, "bytebuffer", objArray)
+	}
+
 	if err != nil {
 		if t.ext.IsTimeoutErr(err) {
 			err = kerrors.ErrRPCTimeout.WithCause(err)

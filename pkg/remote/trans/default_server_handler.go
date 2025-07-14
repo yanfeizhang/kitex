@@ -89,8 +89,8 @@ func (t *svrTransHandler) Write(ctx context.Context, conn net.Conn, sendMsg remo
 func (t *svrTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remote.Message) (nctx context.Context, err error) {
 	var bufReader remote.ByteBuffer
 	defer func() {
-		t.ext.ReleaseBuffer(bufReader, err)
 		rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadFinish, err)
+		//t.ext.ReleaseBuffer(bufReader, err)
 	}()
 	rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadStart, nil)
 
@@ -107,6 +107,17 @@ func (t *svrTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remot
 	} else {
 		err = t.codec.Decode(ctx, recvMsg, bufReader)
 	}
+
+	if val := ctx.Value("bytebuffer"); val != nil {
+		if objArray, ok := val.([]*remote.ByteBuffer); ok {
+			objArray = append(objArray, &bufReader)
+			ctx = context.WithValue(ctx, "bytebuffer", objArray)
+		}
+	} else {
+		objArray := []*remote.ByteBuffer{&bufReader}
+		ctx = context.WithValue(ctx, "bytebuffer", objArray)
+	}
+
 	if err != nil {
 		recvMsg.Tags()[remote.ReadFailed] = true
 		return ctx, err
@@ -163,6 +174,15 @@ func (t *svrTransHandler) OnRead(ctx context.Context, conn net.Conn) (err error)
 		}
 		if err != nil && !closeConnOutsideIfErr {
 			err = nil
+		}
+
+		// 在这里统一释放
+		if val := ctx.Value("bytebuffer"); val != nil {
+			if objArray, ok := val.([]*remote.ByteBuffer); ok {
+				for _, buffer := range objArray {
+					t.ext.ReleaseBuffer(*buffer, err)
+				}
+			}
 		}
 	}()
 	ctx = t.startTracer(ctx, ri)
