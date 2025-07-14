@@ -1,4 +1,4 @@
-module github.com/cloudwego/kitex
+module github.com/yanfeizhang/kitex
 
 go 1.18
 
