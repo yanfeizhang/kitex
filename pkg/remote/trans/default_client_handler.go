@@ -69,7 +69,7 @@ func (t *cliTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remot
 		rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadFinish, err)
 
 		//time.Sleep(time.Second * 60)
-		//t.ext.ReleaseBuffer(bufReader, err)
+		t.ext.ReleaseBuffer(bufReader, err)
 	}()
 
 	t.ext.SetReadTimeout(ctx, conn, recvMsg.RPCInfo().Config(), recvMsg.RPCRole())

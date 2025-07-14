@@ -92,7 +92,7 @@ func (t *svrTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remot
 		rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadFinish, err)
 
 		//time.Sleep(time.Second * 60)
-		//t.ext.ReleaseBuffer(bufReader, err)
+		t.ext.ReleaseBuffer(bufReader, err)
 	}()
 	rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadStart, nil)
 
