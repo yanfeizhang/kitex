@@ -89,10 +89,8 @@ func (t *svrTransHandler) Write(ctx context.Context, conn net.Conn, sendMsg remo
 func (t *svrTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remote.Message) (nctx context.Context, err error) {
 	var bufReader remote.ByteBuffer
 	defer func() {
+		//t.ext.ReleaseBuffer(bufReader, err)
 		rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadFinish, err)
-
-		//time.Sleep(time.Second * 60)
-		t.ext.ReleaseBuffer(bufReader, err)
 	}()
 	rpcinfo.Record(ctx, recvMsg.RPCInfo(), stats.ReadStart, nil)
 
