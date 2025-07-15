@@ -180,13 +180,13 @@ func (t *svrTransHandler) OnRead(ctx context.Context, conn net.Conn) (err error)
 		}
 
 		// 在这里统一释放
-		//if val := ctx.Value("bytebuffer"); val != nil {
-		//	if objArray, ok := val.([]*remote.ByteBuffer); ok {
-		//		for _, buffer := range objArray {
-		//			t.ext.ReleaseBuffer(*buffer, err)
-		//		}
-		//	}
-		//}
+		if val := ctx.Value("bytebuffer"); val != nil {
+			if objArray, ok := val.([]*remote.ByteBuffer); ok {
+				for _, buffer := range objArray {
+					t.ext.ReleaseBuffer(*buffer, err)
+				}
+			}
+		}
 	}()
 	ctx = t.startTracer(ctx, ri)
 	ctx = t.startProfiler(ctx)
