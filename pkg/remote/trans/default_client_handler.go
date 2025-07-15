@@ -75,15 +75,18 @@ func (t *cliTransHandler) Read(ctx context.Context, conn net.Conn, recvMsg remot
 	recvMsg.SetPayloadCodec(t.opt.PayloadCodec)
 	err = t.codec.Decode(ctx, recvMsg, bufReader)
 
-	//if val := ctx.Value("bytebuffer"); val != nil {
-	//	if objArray, ok := val.([]*remote.ByteBuffer); ok {
-	//		objArray = append(objArray, &bufReader)
-	//		ctx = context.WithValue(ctx, "bytebuffer", objArray)
-	//	}
-	//} else {
-	//	objArray := []*remote.ByteBuffer{&bufReader}
-	//	ctx = context.WithValue(ctx, "bytebuffer", objArray)
-	//}
+	if val := ctx.Value("bytebuffer"); val != nil {
+		if objArray, ok := val.([]*remote.ByteBuffer); ok {
+			objArray = append(objArray, &bufReader)
+			ctx = context.WithValue(ctx, "bytebuffer", objArray)
+		} else {
+			objArray := []*remote.ByteBuffer{&bufReader}
+			ctx = context.WithValue(ctx, "bytebuffer", objArray)
+		}
+	} else {
+		objArray := []*remote.ByteBuffer{&bufReader}
+		ctx = context.WithValue(ctx, "bytebuffer", objArray)
+	}
 
 	if err != nil {
 		if t.ext.IsTimeoutErr(err) {
